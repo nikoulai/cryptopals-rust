@@ -1,4 +1,4 @@
-use super::utils::{decode_b64_to_bytes, get_file_path, hex_to_bytes, read_file};
+use super::utils::{get_file_path, hex_to_bytes, read_file};
 use std::collections::HashMap;
 
 pub fn detect_aes_ecb(filename: &str) {
