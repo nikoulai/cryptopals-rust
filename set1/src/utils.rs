@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 use base64::{engine::general_purpose, Engine};
 use hex;
 use std::fs::File;
@@ -12,7 +13,6 @@ pub fn bytes_to_hex(bytes: &[u8]) -> String {
     hex::encode(bytes)
 }
 
-#[warn(dead_code)]
 pub fn xor_vec_bytes(bytes1: &Vec<u8>, bytes2: &Vec<u8>) -> Vec<u8> {
     bytes1
         .iter()

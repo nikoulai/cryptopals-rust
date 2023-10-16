@@ -1,4 +1,5 @@
-mod AES_ECB;
+#![allow(dead_code)]
+mod aes_ecb;
 mod break_repeating_xor;
 mod detect_aes_ecb;
 mod detect_single_character_xor;
