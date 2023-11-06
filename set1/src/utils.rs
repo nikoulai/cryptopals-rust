@@ -40,11 +40,18 @@ pub fn get_file_path(file_name: &str) -> PathBuf {
 pub fn decode_b64_to_bytes(a: &str) -> Vec<u8> {
     general_purpose::STANDARD.decode(a).unwrap()
 }
-
+pub fn encode_b64_to_bytes(a: &str) -> String {
+    general_purpose::STANDARD.encode(a)
+}
 pub fn bytes_to_chunks(bytes: &[u8], chunk_size: usize) -> Vec<&[u8]> {
     let chunks: Vec<&[u8]> = bytes.chunks(chunk_size).collect();
     println!("{:?}", chunks);
     return chunks;
+}
+
+pub fn read_b64_file_to_bytes(file: &str) -> Vec<u8> {
+    let b64_content = read_file(get_file_path(file).to_str().unwrap()).replace("\n", "");
+    decode_b64_to_bytes(b64_content.as_str())
 }
 
 #[cfg(test)]

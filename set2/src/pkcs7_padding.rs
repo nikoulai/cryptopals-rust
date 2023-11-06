@@ -1,44 +1,36 @@
-use std::str::from_utf8;
+pub fn pkcs7_pad(message: &str, block_size: u8) -> Vec<u8> {
+    let pad_length: u8 = block_size - (message.len() as u8) % (block_size);
+    let mut pad_vec = vec![pad_length; pad_length as usize];
+    print!("{:?}", pad_vec);
+    let mut message_vec = message.as_bytes().to_vec();
+    message_vec.append(&mut pad_vec);
+    return message_vec.as_slice().to_owned();
+}
+pub fn pkcs7_pad_bytes(message_vec: &mut Vec<u8>, block_size: u8) {
+    let pad_length: u8 = block_size - (message_vec.len() as u8) % (block_size);
+    let mut pad_vec = vec![pad_length; pad_length as usize];
+    message_vec.append(&mut pad_vec);
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-pub fn pkcs7_pad(message: &mut str, block_size: usize) -> String {
-    let pad_length: u8 = (message.len() % block_size) as u8;
+    #[test]
+    fn test_pkcs7_pad() {
+        // let mut data = "12345678".to_string(); // assuming block size is 8
+        // assert_eq!(pkcs7_pad(&mut data, 8), b"12345678");
 
-    let pad_vec = vec![pad_length; pad_length as usize];
-    let mut pad = from_utf8(pad_vec.as_slice()).unwrap();
+        let mut data = "1234567".to_string(); // 1 character short of 8
+        assert_eq!(pkcs7_pad(&mut data, 8), b"1234567\x01");
 
-    // let mut message_bytes = message.as_bytes().to_vec();
-    let result = [message, pad].concat();
-    println!("{}", result);
-    return result;
-    // println!("{:?}", message_bytes.append(&mut pad_vec));
-    // message_bytes.append(&mut pad_vec);
+        let mut data = "1234567890123456".to_string(); // assuming block size is 16
 
-    // return from_utf8(&message_bytes.to_owned().as_slice()).unwrap();
+        assert_eq!(
+            pkcs7_pad(&data, 16),
+            b"1234567890123456\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10"
+        );
 
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        fn test_pkcs7_pad() {
-            let mut data = "12345678".to_string(); // assuming block size is 8
-            pkcs7_pad(&mut data, 8);
-            assert_eq!(data, "12345678");
-
-            let mut data = "1234567".to_string(); // 1 character short of 8
-            pkcs7_pad(&mut data, 8);
-            assert_eq!(data, "1234567\x01");
-
-            let mut data = "1234567890123456".to_string(); // assuming block size is 16
-            pkcs7_pad(&mut data, 16);
-            assert_eq!(
-                data,
-                "1234567890123456\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10"
-            );
-
-            let mut data = "".to_string();
-            pkcs7_pad(&mut data, 8);
-            assert_eq!(data, "\x08\x08\x08\x08\x08\x08\x08\x08");
-        }
+        let mut data = "".to_string();
+        assert_eq!(pkcs7_pad(&mut data, 8), b"\x08\x08\x08\x08\x08\x08\x08\x08");
     }
 }
