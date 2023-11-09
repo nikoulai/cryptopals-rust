@@ -1,7 +1,7 @@
 pub fn pkcs7_pad(message: &str, block_size: u8) -> Vec<u8> {
     let pad_length: u8 = block_size - (message.len() as u8) % (block_size);
     let mut pad_vec = vec![pad_length; pad_length as usize];
-    print!("{:?}", pad_vec);
+    // print!("{:?}", pad_vec);
     let mut message_vec = message.as_bytes().to_vec();
     message_vec.append(&mut pad_vec);
     return message_vec.as_slice().to_owned();

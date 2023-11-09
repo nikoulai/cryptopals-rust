@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![allow(warnings)]
 pub mod aes_ecb;
 mod break_repeating_xor;
 pub mod detect_aes_ecb;

@@ -14,7 +14,7 @@ pub fn decrypt_file_aes_ecb(file: &str, key: &[u8]) -> String {
 pub fn decrypt_aes_ecb(message: &[u8], key: &[u8]) -> String {
     let cipher = Cipher::aes_128_ecb();
 
-    println!("######{:?} {:?}", message, key);
+    // println!("######{:?} {:?}", message, key);
     let plain_bytes = decrypt(cipher, key, None, message).unwrap();
 
     from_utf8(plain_bytes.as_slice()).unwrap().to_string()
