@@ -60,10 +60,10 @@ pub fn detection_oracle() {
     // println!("{:?} {:?}", block1, block2);
 }
 //todo move to utils
-pub fn generate_random_bytes(len: i32) -> Vec<u8> {
+pub fn generate_random_bytes(len: usize) -> Vec<u8> {
     thread_rng()
         .sample_iter(&Alphanumeric)
-        .take(len as usize)
+        .take(len)
         .map(u8::from)
         .collect()
 }

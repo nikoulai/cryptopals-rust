@@ -4,6 +4,7 @@ use set1::aes_ecb::encrypt_aes_ecb;
 use set1::utils::decode_b64_to_bytes;
 use std::collections::HashMap;
 
+pub type Oracle = dyn FnMut(&[u8]) -> Vec<u8>;
 static unknown_string_b64: &str = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK";
 
 const static_key: &str = "YELLOW SUBMARINE";
@@ -20,7 +21,7 @@ pub fn encryption_oracle(plaintext: &[u8], key: &[u8]) -> Vec<u8> {
     return ciphertext;
 }
 
-pub fn decryption_oracle() {
+pub fn decryption_oracle(oracle: Option<&mut Box<Oracle>>) {
     // let key = generate_random_bytes(16);
     let block_size = detect_block_size();
     let test_text = concat!("AAAAAAAAAAAAAAAA", "AAAAAAAAAAAAAAAA", "AAAAAAAAAAAAAAAA");
@@ -113,6 +114,6 @@ mod tests {
 
     #[test]
     pub fn test_decrypt_ecb_byte() {
-        decryption_oracle();
+        decryption_oracle(None);
     }
 }
