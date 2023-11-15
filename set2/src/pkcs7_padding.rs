@@ -11,6 +11,15 @@ pub fn pkcs7_pad_bytes(message_vec: &mut Vec<u8>, block_size: u8) {
     let mut pad_vec = vec![pad_length; pad_length as usize];
     message_vec.append(&mut pad_vec);
 }
+pub fn pkcs7_unpad_bytes(message_vec: &mut Vec<u8>) -> &mut Vec<u8> {
+    let pad = message_vec.pop();
+    // println!("{:?}", pad);
+    match pad {
+        None => (),
+        Some(pad) => message_vec.truncate((message_vec.len() as u8 - pad + 1) as usize), //+1 Because we have already popped one
+    }
+    message_vec
+}
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -7,12 +7,15 @@ use std::str::from_utf8;
 
 const static_key: &str = "YELLOW SUBMARINE";
 
-// pub fn kv_parser(input: &str) -> Vec<Vec<&str>> {
 pub fn kv_parser(input: &str) -> HashMap<String, String> {
+    kv_parser_generic(input, "&")
+}
+// pub fn kv_parser(input: &str) -> Vec<Vec<&str>> {
+pub fn kv_parser_generic(input: &str, character: &str) -> HashMap<String, String> {
     let mut kv_map = HashMap::new();
 
     let pairs: Vec<_> = input
-        .split("&")
+        .split(character)
         .collect::<Vec<&str>>()
         .iter()
         // .map(|s| s.split("=").collect::<(&str, &str)>()) //why this doesn't work?

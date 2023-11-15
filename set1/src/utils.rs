@@ -43,6 +43,9 @@ pub fn decode_b64_to_bytes(a: &str) -> Vec<u8> {
 pub fn encode_b64_to_bytes(a: &str) -> String {
     general_purpose::STANDARD.encode(a)
 }
+pub fn encode_b64_to_bytes_bytes(a: &[u8]) -> String {
+    general_purpose::STANDARD.encode(a)
+}
 pub fn bytes_to_chunks(bytes: &[u8], chunk_size: usize) -> Vec<&[u8]> {
     let chunks: Vec<&[u8]> = bytes.chunks(chunk_size).collect();
     println!("{:?}", chunks);

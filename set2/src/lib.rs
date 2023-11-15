@@ -7,3 +7,4 @@ pub mod ecb_cut_paste;
 pub mod pkcs7_padding;
 
 pub mod byte_at_a_time_ecb_harder;
+mod cbc_bitflipping;

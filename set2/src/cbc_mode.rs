@@ -16,12 +16,22 @@ pub fn decrypt_file(filename: &str, key: &[u8], iv: &[u8], block_size: usize) ->
 }
 
 pub fn decrypt_aes_cbc(ciphertext: &[u8], key: &[u8], iv: &[u8], block_size: usize) -> String {
+    let message = decrypt_aes_cbc_bytes(ciphertext, key, iv, block_size);
+    from_utf8(&message).unwrap().to_string()
+}
+pub fn decrypt_aes_cbc_bytes(
+    ciphertext: &[u8],
+    key: &[u8],
+    iv: &[u8],
+    block_size: usize,
+) -> Vec<u8> {
     let mut message: Vec<u8> = Vec::with_capacity(ciphertext.len());
 
     let blocks_number = ciphertext.len() / block_size;
     let mut previous_block = iv;
     let key = GenericArray::from_slice(key);
 
+    // println!("The iv is {:?}", previous_block);
     let cipher = Aes128::new(&key);
     for i in 0..blocks_number {
         let current_cipher_block = &ciphertext[i * block_size..(i + 1) * block_size];
@@ -29,25 +39,39 @@ pub fn decrypt_aes_cbc(ciphertext: &[u8], key: &[u8], iv: &[u8], block_size: usi
         let mut block = GenericArray::from_slice(current_cipher_block).clone();
 
         cipher.decrypt_block(&mut block);
+        // println!(
+        //     "xoring plaintext{:?} with cipher{:?}",
+        //     &block.to_vec(),
+        //     &previous_block.to_vec()
+        // );
         let mut xored_block = xor_vec_bytes(&block.to_vec(), &previous_block.to_vec());
         previous_block = current_cipher_block;
 
         message.append(&mut xored_block);
     }
-    from_utf8(&message).unwrap().to_string()
+    return message;
 }
 
 pub fn encrypt_aes_cbc(plaintext: &[u8], key: &[u8], iv: &[u8], block_size: usize) -> String {
+    let ciphertext = encrypt_aes_cbc_bytes(plaintext, key, iv, block_size);
+    general_purpose::STANDARD.encode(ciphertext)
+    // from_utf8(&ciphertext).unwrap().to_string()
+}
+pub fn encrypt_aes_cbc_bytes(
+    plaintext: &[u8],
+    key: &[u8],
+    iv: &[u8],
+    block_size: usize,
+) -> Vec<u8> {
     let mut ciphertext: Vec<u8> = Vec::with_capacity(plaintext.len());
     let mut plaintext = from_utf8(plaintext).unwrap();
 
     let mut plaintext = pkcs7_pad(&mut plaintext, 16);
-    // println!("{:?} {:?}", plaintext, plaintext.len());
+    // println!("plaintext: {:?} {:?}", plaintext, plaintext.len());
 
     let blocks_number = plaintext.len() / block_size;
 
     let mut previous_block: &GenericArray<u8, U16> = GenericArray::from_slice(iv);
-
     // previous_block = Block::clone_from_slice(iv);
     let key = GenericArray::from_slice(key);
 
@@ -58,7 +82,14 @@ pub fn encrypt_aes_cbc(plaintext: &[u8], key: &[u8], iv: &[u8], block_size: usiz
         let current_plain_block = &plaintext[i * block_size..(i + 1) * block_size];
 
         xored_block = xor_vec_bytes(&current_plain_block.to_vec(), &previous_block.to_vec());
-
+        // if i == 1 {
+        // println!(
+        //     "xoring plaintext {:?} with cipher{:?} and the res {:?}",
+        //     &current_plain_block.to_vec(),
+        //     &previous_block.to_vec(),
+        //     &xored_block
+        // );
+        // }
         block = GenericArray::from_slice(&*xored_block).clone();
         cipher.encrypt_block(&mut block);
         // previous_block = Block::clone_from_slice(current_plain_block);
@@ -67,14 +98,13 @@ pub fn encrypt_aes_cbc(plaintext: &[u8], key: &[u8], iv: &[u8], block_size: usiz
         ciphertext.append(&mut block.to_vec().clone());
     }
     // println!("{:?}", ciphertext);
-
-    general_purpose::STANDARD.encode(ciphertext)
-    // from_utf8(&ciphertext).unwrap().to_string()
+    ciphertext
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use set1::utils::encode_b64_to_bytes_bytes;
     const key: &str = "YELLOW SUBMARINE";
     const iv: &[u8; 16] = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
     #[test]
@@ -118,8 +148,12 @@ mod tests {
         println!("{:?}", plaintext);
         let res = encrypt_aes_cbc(plaintext.as_bytes(), key.as_bytes(), iv, block_size);
 
-        println!("{:?}", res);
+        // println!(
+        //     "{:?}\n {:?}",
+        //     res,
+        //     encode_b64_to_bytes_bytes(contents.as_slice())
+        // );
 
-        // assert_eq!(res, contents);
+        assert_eq!(res, encode_b64_to_bytes_bytes(contents.as_slice()));
     }
 }
