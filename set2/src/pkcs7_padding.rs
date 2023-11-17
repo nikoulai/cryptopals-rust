@@ -37,7 +37,7 @@ pub fn validate_and_strip_pkcs7_padding(bytes: &[u8]) -> Result<Vec<u8>, &'stati
         {
             // If valid, strip the padding and return the result
             let stripped_data = &bytes[..bytes.len() - last_byte as usize];
-            println!("The padding {:?}", last_byte);
+            // println!("The padding {:?}", last_byte);
             return Ok(stripped_data.to_vec());
             // if let Ok(result) = String::from_utf8(stripped_data.to_vec()) {
             //     return Ok(result);

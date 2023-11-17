@@ -20,7 +20,6 @@ const strings: [&str; 10] = [
     "MDAwMDA5aXRoIG15IHJhZy10b3AgZG93biBzbyBteSBoYWlyIGNhbiBibG93",
 ];
 
-// pub type Oracle = dyn FnMut(&[u8]) -> Vec<u8>;
 pub fn create_oracles() -> (
     Box<dyn FnMut() -> (Vec<u8>, Vec<u8>)>, //Encryption that returns iv & ciphertext
     Box<dyn FnMut(&[u8]) -> Result<Vec<u8>, &'static str>>, //Decryption
@@ -29,20 +28,19 @@ pub fn create_oracles() -> (
     let value = rng.gen_range(0..10);
     let string_to_encrypt = strings[value];
     let mut plaintext = decode_b64_to_bytes(string_to_encrypt);
-    // let mut plaintext = "00000000000000000000000000000000123456789abcdef"
-    //     .as_bytes()
-    //     .to_vec();
+
     let key = generate_random_bytes(block_size);
     let iv = generate_random_bytes(block_size);
-    // println!("{:?} {:?}", &key, &iv);
-    let key = [
-        69, 49, 53, 105, 117, 49, 121, 90, 65, 108, 90, 99, 73, 104, 103, 103,
-    ]
-    .to_vec();
-    let iv = [
-        74, 99, 78, 107, 122, 84, 53, 84, 98, 52, 72, 74, 122, 116, 71, 89,
-    ]
-    .to_vec();
+
+    //These were failing initially
+    // let key = [
+    //     69, 49, 53, 105, 117, 49, 121, 90, 65, 108, 90, 99, 73, 104, 103, 103,
+    // ]
+    // .to_vec();
+    // let iv = [
+    //     74, 99, 78, 107, 122, 84, 53, 84, 98, 52, 72, 74, 122, 116, 71, 89,
+    // ]
+    // .to_vec();
 
     let key1 = key.clone();
     let iv1 = iv.clone();
@@ -82,8 +80,6 @@ pub unsafe fn padding_oracle_attack() {
     for cur_block in (1..num_blocks).rev() {
         //clear the vector for current block, we need only this block's intermediate values
         temp_intermediates.clear();
-        // let mut temp_intermediates: Vec<u8> = Vec::with_capacity(block_size);
-        // let mut temp_intermediates: Vec<u8> = Vec::with_capacity(block_size);
 
         //just for reference/easier usage
         let prev_cipherblock =
@@ -117,21 +113,10 @@ pub unsafe fn padding_oracle_attack() {
                 );
 
                 if let Ok(_) = dec_oracle(malformed_ciphertext.as_slice()) {
-                    println!("Malformed: {:?}", malformed_ciphertext);
-                    println!(
-                        "cur_block: {}, malformedciphert: {:?}",
-                        cur_block,
-                        malf_cipher_block.clone()
-                    );
                     let intermediate = wanted_padding ^ j;
-                    println!("wanted_padding: {}, j: {}", wanted_padding, j);
                     temp_intermediates.push(intermediate);
                     let p = prev_cipherblock[i] ^ intermediate;
-                    println!(
-                        "prev_cipherblock[i]: {},intermediate: {}, p: {}",
-                        prev_cipherblock[i], intermediate, p
-                    );
-                    println!("Char: {:?}", from_utf8(&[p]));
+
                     plaintext.push(p);
                     break;
                 }
@@ -149,7 +134,7 @@ mod tests {
     use super::*;
 
     #[test]
-    pub fn test_encrypt() {
+    pub fn test_padding_oracle_attack() {
         unsafe {
             padding_oracle_attack();
         }
