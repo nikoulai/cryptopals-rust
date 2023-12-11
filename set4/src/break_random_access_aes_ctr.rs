@@ -98,8 +98,8 @@ mod tests {
         let newplaintext = ctr_to_bytes(newcipher.as_slice(), key.as_bytes(), 0);
 
         // assert_eq!(from_utf8(&*newplaintext).unwrap(), "hindom plaintext");
-
-        println!("{:?}", from_utf8(&*newplaintext).unwrap());
+        let mut res = String::from_utf8(Vec::from(&*newplaintext)).unwrap();
+        println!("{:?}{}", res.truncate(res.len() - 10), "***");
     }
     #[test]
     pub fn test_random_access_ctr() {

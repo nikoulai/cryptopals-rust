@@ -15,3 +15,4 @@ rand = "0.8.5"
 set1 = { path = "../set1" }
 set2 = { path = "../set2" }
 set3 = { path = "../set3" }
+sha1_smol = "1.0.0"
