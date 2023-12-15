@@ -10,9 +10,7 @@ aes = "0.8.3"
 base64 = "0.21.4"
 byteorder = "1.5.0"
 hex = "0.4.3"
-openssl = "0.10.57"
 rand = "0.8.5"
 set1 = { path = "../set1" }
 set2 = { path = "../set2" }
 set3 = { path = "../set3" }
-sha1_smol = "1.0.0"
