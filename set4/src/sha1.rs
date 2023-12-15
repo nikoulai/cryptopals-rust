@@ -38,7 +38,7 @@ pub fn pad_message(message: &Vec<u8>) -> Result<Vec<Block>, &'static str> {
         paded_message.push(*byte);
     }
 
-    println!("sha1mac{:?}", paded_message);
+    // println!("sha1mac{:?}", paded_message);
     Ok(Block::from_message(&paded_message).unwrap())
 }
 

@@ -1,26 +1,31 @@
 use crate::sha1_mac::sha1_mac;
 use set2::cbc_mode::encrypt_aes_cbc_bytes;
 use set2::ecb_cbc_detection_oracle::generate_random_bytes;
-use std::str::from_utf8;
+use std::str::{from_utf8, from_utf8_unchecked};
 // https://www.skullsecurity.org/2012/everything-you-need-to-know-about-hash-length-extension-attacks
 use super::sha1::{compute, compute_with_registers, pad_message, Block};
 use rand::{thread_rng, Rng};
 
-const key: &[u8] = b"12345";
 const data_string: &str =
-    // "comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon";
-    "1";
+    "comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon";
 fn create_mac_function() -> Box<dyn FnMut(&[u8]) -> String> {
-    // let key = generate_random_bytes(rand::thread_rng().gen_range(5..20));
-    // let key = generate_random_bytes(rand::thread_rng().gen_range(5..6));
-    let mac = move |message: &[u8]| sha1_mac(key, message);
+    let key = generate_random_bytes(rand::thread_rng().gen_range(5..20));
+    let mac = move |message: &[u8]| sha1_mac(key.as_slice(), message);
 
     Box::new(mac)
 }
 
-fn verify_mac(sh1mac: &mut Box<dyn FnMut(&[u8]) -> String>, message: &[u8], hash: String) -> bool {
-    println!("{}\n{}", sh1mac(message), hash);
-    sh1mac(message) == hash
+unsafe fn verify_mac(
+    sh1mac: &mut Box<dyn FnMut(&[u8]) -> String>,
+    message: &[u8],
+    hash: String,
+) -> bool {
+    // println!("{}\n{}", sh1mac(message), hash);
+    if sh1mac(message) == hash {
+        println!("{}", from_utf8_unchecked(message));
+        return true;
+    }
+    false
 }
 pub(crate) fn my_padding(input: &[u8]) -> Vec<u8> {
     padding(input, Box::new(|x: &[u8]| x.len()))
@@ -33,7 +38,6 @@ fn my_padding_with_extra_len(input: &[u8], extra_len: usize) -> Vec<u8> {
 fn padding(input: &[u8], mut custom_len: Box<dyn FnMut(&[u8]) -> usize>) -> Vec<u8> {
     let block_size = 64; //bytes
     let length_bytes = 8;
-    let inter_pad_size = 56;
 
     let input_size = input.len();
     let custom_input_size = custom_len(input);
@@ -42,13 +46,6 @@ fn padding(input: &[u8], mut custom_len: Box<dyn FnMut(&[u8]) -> usize>) -> Vec<
     if padding_length <= 0 {
         padding_length = block_size as i64 + padding_length
     }
-    // println!(
-    //     "@@@{},{},{},{}",
-    //     input_size % block_size,
-    //     (input_size % block_size) % inter_pad_size,
-    //     length_bytes,
-    //     padding_length
-    // );
 
     let mut padded_message =
         Vec::with_capacity(input_size + padding_length as usize + length_bytes as usize);
@@ -64,14 +61,11 @@ fn padding(input: &[u8], mut custom_len: Box<dyn FnMut(&[u8]) -> usize>) -> Vec<
     // Block::from_message(&padded_message)
 }
 
-fn main() {
+unsafe fn main() {
     let mut sha_mac = create_mac_function();
     let initial_hex = sha_mac(data_string.as_bytes());
-    println!("{:?}", initial_hex);
-    println!("+++++++++++++++++++++++++++");
 
     let string_to_add = ";admin=true";
-    let string_to_add = "1";
 
     //start the attack
     //split hash into the register values
@@ -89,7 +83,7 @@ fn main() {
         _ => panic!("Vec<u32> does not have exactly 5 elements"),
     };
 
-    for i in 5usize..6 {
+    for i in 0usize..20 {
         println!("Trying for length: {}", i);
 
         let mut placeholder = "A".repeat(i);
@@ -97,33 +91,27 @@ fn main() {
         let mut malformed_data = placeholder.as_bytes().to_vec();
         let data_len = malformed_data.len();
 
-        //try to guess the length of secret
+        //0 because the add as prefix a placeholder for the secret
+        // I used a placed holder as a workaround for the aligning of the padding, else I would have to remove some 0 aka write a new padding function (is theere another way?)
         malformed_data = my_padding_with_extra_len(malformed_data.as_slice(), 0);
-
-        // malformed_data.append(&mut string_to_add.as_bytes().to_vec());
 
         //server will prepend the secret and add the padding
         malformed_data.append(&mut string_to_add.as_bytes().to_vec());
-        // let mut server_test_string = string_to_add.as_bytes().to_vec();
-        println!(
-            "****{}",
-            my_padding("A".repeat(data_len).as_bytes()).len() + i + string_to_add.len()
-        );
-        let mut client_string = my_padding_with_extra_len(
+
+        let client_string = my_padding_with_extra_len(
             string_to_add.as_bytes(),
             my_padding("A".repeat(data_len).as_bytes()).len(),
         );
-        println!("Full test string{:?}", client_string);
-        // println!("full: {:?}", full_test_string);
+
         let result =
             match compute_with_registers(Block::from_message(&client_string).unwrap(), registers) {
                 Ok(x) => x,
                 Err(_) => String::new(),
             };
-        // println!("{}", result);
+
         // [i..] so we can skip the placeholder
         if verify_mac(&mut sha_mac, &malformed_data.as_slice()[i..], result) {
-            println!("Success!!!!!!!!!")
+            println!("Success!!!!!!!!! for key length: {}", i);
         }
     }
     // println!("{:?}", ((data_string.len() * 8) as u64).to_be_bytes());
@@ -145,7 +133,9 @@ mod tests {
 
     #[test]
     pub fn test_break_length_extension_sha() {
-        main();
+        unsafe {
+            main();
+        }
     }
 
     #[test]
