@@ -14,3 +14,6 @@ rand = "0.8.5"
 set1 = { path = "../set1" }
 set2 = { path = "../set2" }
 set3 = { path = "../set3" }
+bytes = { version = "1.5.0", features = [] }
+cc = "1.0.83"
+digest = "0.11.0-pre"
