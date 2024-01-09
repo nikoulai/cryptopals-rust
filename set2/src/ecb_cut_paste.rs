@@ -13,7 +13,7 @@ pub fn kv_parser(input: &str) -> HashMap<String, String> {
 // pub fn kv_parser(input: &str) -> Vec<Vec<&str>> {
 pub fn kv_parser_generic(input: &str, character: &str) -> HashMap<String, String> {
     let mut kv_map = HashMap::new();
-
+    // println!("{:?},{}", input, input.len());
     let pairs: Vec<_> = input
         .split(character)
         .collect::<Vec<&str>>()
@@ -23,6 +23,7 @@ pub fn kv_parser_generic(input: &str, character: &str) -> HashMap<String, String
         .map(|s| s.split("=").collect::<Vec<_>>())
         .collect();
     for p in &pairs {
+        // println!("{:?}", p);
         kv_map.insert(p[0].to_string(), p[1].to_string());
     }
     println!("{:?}", kv_map);

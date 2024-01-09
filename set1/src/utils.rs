@@ -5,6 +5,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 
+pub const block_size: usize = 16;
 pub fn hex_to_bytes(hex_string: &str) -> Vec<u8> {
     hex::decode(hex_string).unwrap()
 }
@@ -55,6 +56,16 @@ pub fn bytes_to_chunks(bytes: &[u8], chunk_size: usize) -> Vec<&[u8]> {
 pub fn read_b64_file_to_bytes(file: &str) -> Vec<u8> {
     let b64_content = read_file(get_file_path(file).to_str().unwrap()).replace("\n", "");
     decode_b64_to_bytes(b64_content.as_str())
+}
+
+pub fn parse_hex_string_to_bytes(hex: &str) -> Vec<u8> {
+    hex.as_bytes()
+        .chunks(2) //32bit
+        .map(std::str::from_utf8)
+        .map(|x| x.unwrap())
+        .map(|x| u8::from_str_radix(x, 16))
+        .collect::<Result<Vec<u8>, _>>()
+        .unwrap()
 }
 
 #[cfg(test)]

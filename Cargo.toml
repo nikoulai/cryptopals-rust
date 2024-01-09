@@ -3,7 +3,9 @@
 members = [
 	'set1',
 	'set2',
-	'set3'
+	'set3',
+	'set4',
+	'set5'
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

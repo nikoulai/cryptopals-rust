@@ -5,11 +5,12 @@ use crate::ecb_cut_paste::kv_parser_generic;
 use crate::pkcs7_padding::pkcs7_unpad_bytes;
 use openssl::version::platform;
 use set1::aes_ecb::{decrypt_aes_ecb, encrypt_aes_ecb};
+use set1::utils::block_size;
 use set1::utils::xor_vec_bytes;
 use std::collections::HashMap;
 use std::str::{from_utf8, from_utf8_unchecked};
 
-const static_key: &str = "1234444444444a44";
+pub const static_key: &str = "1234444444444a44";
 pub fn format_data(data: &str) -> String {
     let striped_data = data.replace(";", "").replace("=", "");
     let prefix = "comment1=cooking%20MCs;userdata=";
@@ -23,14 +24,15 @@ pub fn format_data(data: &str) -> String {
 }
 
 pub fn encrypt_data(data: &str) -> Vec<u8> {
-    let block_size = 16;
     let formatted_data = format_data(data);
     // let padded_data = pkcs7_padding::pkcs7_pad(formatted_data.as_str(), block_size);
-
+    encrypt_data_bytes(formatted_data.as_bytes())
+}
+pub fn encrypt_data_bytes(data: &[u8]) -> Vec<u8> {
     // println!(" Padded: {:?}", padded_data);
     // println!("{:?}", formatted_data.as_bytes());
     encrypt_aes_cbc_bytes(
-        formatted_data.as_bytes(),
+        data,
         static_key.as_bytes(),
         static_key.as_bytes(),
         block_size as usize,
@@ -47,9 +49,9 @@ pub unsafe fn decrypt_data(data: Vec<u8>) -> String {
     let text = pkcs7_unpad_bytes(&mut decrypted_text);
     let text = from_utf8_unchecked(text);
     // println!("decrypted text: {:?}", text);
-    println!("*******{:?}", text);
+    // println!("*******{:?}", text);
     let res = kv_parser_generic(text, ";");
-    println!("iiiii{:?}", res);
+    // println!("iiiii{:?}", res);
     return "".to_string();
     // return res["admin"].clone();
 }

@@ -3,7 +3,12 @@ use super::utils::{decode_b64_to_bytes, get_file_path, read_file};
 use openssl::symm::{decrypt, encrypt, Cipher};
 use std::str::from_utf8;
 //https://docs.rs/openssl/latest/openssl/symm/index.html
-
+use aes::cipher::consts::U16;
+use aes::cipher::{
+    generic_array::GenericArray, Block, BlockCipher, BlockDecrypt, BlockEncrypt, BlockSizeUser,
+    KeyInit,
+};
+use aes::Aes128;
 pub fn decrypt_file_aes_ecb(file: &str, key: &[u8]) -> String {
     let b64_content = read_file(get_file_path(file).to_str().unwrap()).replace("\n", "");
 
@@ -19,9 +24,30 @@ pub fn decrypt_aes_ecb(message: &[u8], key: &[u8]) -> String {
 
     from_utf8(plain_bytes.as_slice()).unwrap().to_string()
 }
+pub fn encrypt_aes_bytes(plaintext: &[u8], key: &[u8], block_size: usize) -> Vec<u8> {
+    let key = GenericArray::from_slice(key);
 
+    let cipher = Aes128::new(&key);
+
+    let mut block = GenericArray::from_slice(plaintext).clone();
+    cipher.encrypt_block(&mut block);
+    return block.to_vec();
+    // previous_block = Block::clone_from_slice(current_plain_block);
+    // previous_block = GenericArray::from_slice(&*block);
+    //
+    // ciphertext.append(&mut block.to_vec().clone());
+    // // println!("{:?}", ciphertext);
+    // ciphertext
+}
 pub fn encrypt_aes_ecb(message: &[u8], key: &[u8]) -> Vec<u8> {
     let cipher = Cipher::aes_128_ecb();
+    println!(
+        "{:?} {:?} {:?} {:?}",
+        &message,
+        message.len(),
+        &key,
+        key.len()
+    );
     let cipher_bytes = encrypt(cipher, key, None, message).unwrap();
     return cipher_bytes;
 }
@@ -32,7 +58,7 @@ mod tests {
     const key: &str = "YELLOW SUBMARINE";
     #[test]
     fn test_decrypt_aes_128_ecb() {
-        assert_eq!(decrypt_file_aes_ecb(file, key), test_string);
+        assert_eq!(decrypt_file_aes_ecb(file, key.as_bytes()), test_string);
     }
 
     #[test]

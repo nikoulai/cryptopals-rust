@@ -3,7 +3,6 @@ use super::single_byte_xor_cipher::single_bytes_xor_cipher;
 use super::utils::{decode_b64_to_bytes, read_file, xor_vec_bytes};
 use crate::utils::{get_file_path, hex_to_bytes};
 
-
 use std::str::from_utf8;
 #[derive(Debug, PartialEq, Eq, PartialOrd)]
 struct Item {
@@ -69,65 +68,12 @@ pub fn break_repeating_key() {
     // let first_lines = lines.iter().take(4).collect::<Vec<&Vec<u8>>>();
     // println!("{:?}", first_lines);
     // let top_three_sizes: Vec<(u8,u8)> =  Vec::with_capacity(3);
-    let mut hamming_distances = Vec::with_capacity(40);
     let content = contents.replace('\n', "");
     let content_bytes = decode_b64_to_bytes(content.as_str());
-    for KEYSIZE in 2..41 {
-        let number_of_blocks = content_bytes.len() / KEYSIZE - 1;
-        let mut res = 0;
-        // for i in (0..number_of_blocks/2) {
-        for i in (0..number_of_blocks / 4).step_by(2) {
-            println!(
-                "The step is {}, {}, {}, {} , {}",
-                i,
-                (i * KEYSIZE),
-                ((i + 1) * KEYSIZE),
-                (i + 1) * KEYSIZE,
-                (i + 2) * KEYSIZE
-            );
-            let first_slice = &content_bytes[(i * KEYSIZE)..((i + 1) * KEYSIZE)].to_vec();
-            let second_slice = &content_bytes[((i + 1) * KEYSIZE)..((i + 2) * KEYSIZE)].to_vec();
-            // let first_slice = &content_bytes[0..KEYSIZE].to_vec();
-            // = &content_bytes[KEYSIZE..2*KEYSIZE].to_vec();
-            let ham_distance_normalized_1 =
-                hamming_distance_bytes(first_slice, second_slice) / KEYSIZE as u128;
-
-            res += ham_distance_normalized_1;
-        }
-
-        // let third_slice = &content_bytes[2*KEYSIZE..3*KEYSIZE].to_vec();
-        // let fourth_slice = &content_bytes[3*KEYSIZE..4*KEYSIZE].to_vec();
-
-        // let ham_distance_normalized_3 =  hamming_distance_bytes(first_slice,third_slice)/ KEYSIZE as u128;
-        // let ham_distance_normalized_4 =  hamming_distance_bytes(second_slice,fourth_slice)/ KEYSIZE as u128;
-        // let res = (ham_distance_normalized_1 + ham_distance_normalized_2 + ham_distance_normalized_3 + ham_distance_normalized_4);
-        // println!("{:?}", ham_distance_normalized_1 / (KEYSIZE as u128));
-        // println!("{:?}", res);
-        hamming_distances.push(Item::new(res, KEYSIZE));
-    }
-
-    hamming_distances.sort_by(|a, b| b.cmp(a));
-    // println!("{:?} {:?}", first_slice, second_slice);
-    println!("The heap: {:?}", hamming_distances);
-
-    let mut higher_scores = Vec::new();
-    higher_scores.push(hamming_distances.pop().unwrap().index);
-    higher_scores.push(hamming_distances.pop().unwrap().index);
-    higher_scores.push(hamming_distances.pop().unwrap().index);
-    higher_scores.push(hamming_distances.pop().unwrap().index);
-    println!("{:?}", higher_scores);
-
-    for i in higher_scores {
-        let trasposed_blocks = transpose_blocks(&content_bytes, i);
-        println!("Transposed blocks number is {}", &trasposed_blocks.len());
-        let mut possible_key: Vec<u8> = Vec::new();
-        for blocks in trasposed_blocks {
-            let hex_string = hex::encode(&blocks);
-            let (_, char) = single_bytes_xor_cipher(hex_string.as_str());
-            possible_key.push(char);
-        }
+    let possible_keys = break_repeating_key_bytes(content_bytes.clone(), 0);
+    for possible_key in possible_keys {
         let possible_key_string = from_utf8(&possible_key).unwrap();
-        println!("{} -------------{:?}", i, possible_key);
+        println!("-------------{:?}", possible_key);
 
         println!(
             "{:?}",
@@ -143,6 +89,88 @@ pub fn break_repeating_key() {
             )
         );
     }
+}
+pub fn break_repeating_key_bytes(content_bytes: Vec<u8>, key_size: usize) -> Vec<Vec<u8>> {
+    let mut hamming_distances = Vec::with_capacity(40);
+    let mut possible_key_sizes = 2..41;
+    if key_size != 0 {
+        println!("^^^^^^");
+        possible_key_sizes = key_size..(key_size + 1);
+    }
+    println!("^^^^^^{:?}", possible_key_sizes);
+    for KEYSIZE in possible_key_sizes {
+        let number_of_blocks = content_bytes.len() / KEYSIZE - 1;
+        let mut res = 0;
+        // for i in (0..number_of_blocks/2) {
+        for i in (0..number_of_blocks / 4).step_by(2) {
+            // println!(
+            //     "The step is {}, {}, {}, {} , {}",
+            //     i,
+            //     (i * KEYSIZE),
+            //     ((i + 1) * KEYSIZE),
+            //     (i + 1) * KEYSIZE,
+            //     (i + 2) * KEYSIZE
+            // );
+            let first_slice = &content_bytes[(i * KEYSIZE)..((i + 1) * KEYSIZE)].to_vec();
+            let second_slice = &content_bytes[((i + 1) * KEYSIZE)..((i + 2) * KEYSIZE)].to_vec();
+            // let first_slice = &content_bytes[0..KEYSIZE].to_vec();
+            // = &content_bytes[KEYSIZE..2*KEYSIZE].to_vec();
+            let ham_distance_normalized_1 =
+                hamming_distance_bytes(first_slice, second_slice) / KEYSIZE as u128;
+
+            res += ham_distance_normalized_1;
+        }
+        // let third_slice = &content_bytes[2*KEYSIZE..3*KEYSIZE].to_vec();
+        // let fourth_slice = &content_bytes[3*KEYSIZE..4*KEYSIZE].to_vec();
+
+        // let ham_distance_normalized_3 =  hamming_distance_bytes(first_slice,third_slice)/ KEYSIZE as u128;
+        // let ham_distance_normalized_4 =  hamming_distance_bytes(second_slice,fourth_slice)/ KEYSIZE as u128;
+        // let res = (ham_distance_normalized_1 + ham_distance_normalized_2 + ham_distance_normalized_3 + ham_distance_normalized_4);
+        // println!("{:?}", ham_distance_normalized_1 / (KEYSIZE as u128));
+        println!("resresresresres: {:?} KEYSIZE {}", res, KEYSIZE);
+        hamming_distances.push(Item::new(res, KEYSIZE));
+    }
+
+    hamming_distances.sort_by(|a, b| b.cmp(a));
+    let mut higher_scores = Vec::new();
+
+    // println!("{:?} {:?}", first_slice, second_slice);
+    println!("The heap: {:?}", hamming_distances);
+    let mut top_distances = hamming_distances
+        .iter()
+        .rev()
+        .map(|x| x.index.clone())
+        .collect::<Vec<usize>>()
+        .into_iter()
+        .take(4)
+        .collect::<Vec<usize>>();
+    higher_scores.append(&mut top_distances);
+
+    // higher_scores.push(hamming_distances.pop().unwrap_or(Vec::new()).index);
+    // higher_scores.push(hamming_distances.pop().unwrap().index);
+    // higher_scores.push(hamming_distances.pop().unwrap().index);
+    // higher_scores.push(hamming_distances.pop().unwrap().index);
+    // higher_scores.push(hamming_distances.pop().unwrap().index);
+    // higher_scores.push(hamming_distances.pop().unwrap().index);
+    // higher_scores.push(hamming_distances.pop().unwrap().index);
+    // higher_scores.push(hamming_distances.pop().unwrap().index);
+    // higher_scores.push(hamming_distances.pop().unwrap().index);
+    // higher_scores.push(hamming_distances.pop().unwrap().index);
+    println!("{:?}", higher_scores);
+
+    let mut possible_keys: Vec<Vec<u8>> = Vec::new();
+    for i in higher_scores {
+        let trasposed_blocks = transpose_blocks(&content_bytes, i);
+        let mut possible_key: Vec<u8> = Vec::new();
+        println!("Transposed blocks number is {}", &trasposed_blocks.len());
+        for blocks in trasposed_blocks {
+            let hex_string = hex::encode(&blocks);
+            let (_, char) = single_bytes_xor_cipher(hex_string.as_str());
+            possible_key.push(char);
+        }
+        possible_keys.push(possible_key.clone());
+    }
+    return possible_keys;
 }
 
 #[cfg(test)]

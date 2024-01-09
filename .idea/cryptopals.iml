@@ -5,6 +5,9 @@
       <sourceFolder url="file://$MODULE_DIR$/set1/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/set2/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/set3/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/set4/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/sha1-smol/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/set5/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
